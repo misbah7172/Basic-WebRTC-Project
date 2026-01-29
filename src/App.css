@@ -110,6 +110,7 @@ h1 {
   flex-direction: column;
   align-items: center;
   margin-top: 20px;
+  width: 100%;
 }
 
 .video-container h2 {
@@ -122,27 +123,91 @@ h1 {
   width: 100%;
   max-width: 800px;
   height: auto;
+  aspect-ratio: 16 / 9;
   border-radius: 15px;
   background: #000;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  object-fit: cover;
 }
 
 @media (max-width: 768px) {
   .container {
-    padding: 20px;
+    padding: 15px;
+    border-radius: 15px;
   }
 
   h1 {
-    font-size: 2rem;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+  }
+
+  .status-bar {
+    padding: 12px;
+    margin-bottom: 20px;
+  }
+
+  .status-text {
+    font-size: 0.9rem;
   }
 
   .button-container {
     flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
   }
 
   .btn {
     width: 100%;
     padding: 15px 30px;
     font-size: 1.2rem;
+  }
+
+  .video-container {
+    margin-top: 15px;
+  }
+
+  .video-container h2 {
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+  }
+
+  .video-player {
+    max-width: 100%;
+    border-radius: 10px;
+    aspect-ratio: 4 / 3;
+  }
+
+  .btn-stop {
+    margin-top: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .status-bar {
+    padding: 10px;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .video-container h2 {
+    font-size: 1.1rem;
+  }
+
+  .video-player {
+    border-radius: 8px;
+  }
+
+  .btn {
+    padding: 12px 20px;
+    font-size: 1rem;
   }
 }
