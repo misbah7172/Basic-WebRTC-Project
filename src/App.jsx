@@ -145,10 +145,13 @@ function App() {
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
+        console.log('Sending ICE candidate:', event.candidate.type)
         wsRef.current.send(JSON.stringify({
           type: 'ice-candidate',
           candidate: event.candidate
         }))
+      } else {
+        console.log('All ICE candidates have been sent')
       }
     }
 
@@ -167,13 +170,28 @@ function App() {
       }
     }
 
+    pc.oniceconnectionstatechange = () => {
+      console.log('ICE connection state:', pc.iceConnectionState)
+      setStatus(`ICE: ${pc.iceConnectionState}`)
+    }
+
     pc.onconnectionstatechange = () => {
       console.log('Connection state:', pc.connectionState)
       if (pc.connectionState === 'connected') {
-        setStatus('Connected')
+        setStatus('Connected ✓')
       } else if (pc.connectionState === 'disconnected') {
         setStatus('Disconnected')
+      } else if (pc.connectionState === 'failed') {
+        setStatus('Connection Failed - Retrying...')
+        // Try ICE restart
+        if (modeRef.current === 'stream') {
+          console.log('Connection failed, attempting ICE restart')
+        }
       }
+    }
+
+    pc.onicegatheringstatechange = () => {
+      console.log('ICE gathering state:', pc.iceGatheringState)
     }
 
     return pc
@@ -287,40 +305,57 @@ function App() {
 
   const handleOffer = async (offer) => {
     try {
+      console.log('Handling offer, creating/getting peer connection')
       const pc = peerConnectionRef.current || createPeerConnection()
+      
+      console.log('Setting remote description (offer)')
       await pc.setRemoteDescription(new RTCSessionDescription(offer))
       
+      console.log('Creating answer')
       const answer = await pc.createAnswer()
       await pc.setLocalDescription(answer)
       
+      console.log('Sending answer to streamer')
       wsRef.current.send(JSON.stringify({
         type: 'answer',
         answer: answer
       }))
       
-      setStatus('Connected to viewer')
+      setStatus('Answer sent - Connecting...')
     } catch (error) {
       console.error('Error handling offer:', error)
+      setStatus('Error: ' + error.message)
     }
   }
 
   const handleAnswer = async (answer) => {
     try {
+      console.log('Received answer, setting remote description')
+      if (!peerConnectionRef.current) {
+        console.error('No peer connection available!')
+        return
+      }
+      
       await peerConnectionRef.current.setRemoteDescription(
         new RTCSessionDescription(answer)
       )
-      setStatus('Connected to streamer')
+      console.log('Remote description set successfully')
+      setStatus('Answer received - Connecting...')
     } catch (error) {
       console.error('Error handling answer:', error)
+      setStatus('Error: ' + error.message)
     }
   }
 
   const handleIceCandidate = async (candidate) => {
     try {
-      if (peerConnectionRef.current) {
+      if (peerConnectionRef.current && peerConnectionRef.current.remoteDescription) {
+        console.log('Adding ICE candidate:', candidate.candidate?.substring(0, 50) + '...')
         await peerConnectionRef.current.addIceCandidate(
           new RTCIceCandidate(candidate)
         )
+      } else {
+        console.log('Skipping ICE candidate (no remote description yet)')
       }
     } catch (error) {
       console.error('Error adding ICE candidate:', error)
